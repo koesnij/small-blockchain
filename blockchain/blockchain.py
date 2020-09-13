@@ -1,3 +1,4 @@
+import copy
 from hashlib import sha256
 import json
 from time import time
@@ -18,6 +19,12 @@ class Blockchain:
         self.new_block(100, '1')
 
     def register_node(self, address):
+        """
+        Registers new full node
+
+        :param address: Hosts's address
+        :return: None
+        """
         self.nodes.add(urlparse(address).netloc)
 
     def new_block(self, nonce, previous_hash):
@@ -28,19 +35,19 @@ class Blockchain:
         :param previous_hash: 이전 블록의 Hash
         :return: 생성된 블록
         """
-        block = {
+        new_block = {
             'index': len(self.chain) + 1,
             'version': self.DEFAULT_VERSION,
             'previous_hash': previous_hash or self.hash_block(self.chain[-1]),
-            'transactions': self.current_transactions,
+            'transactions': copy.deepcopy(self.current_transactions),
             'timestamp': time(),    #
             'nonce': nonce
         }
 
+        self.chain.append(new_block)    # Append block to chain
         self.current_transactions.clear()   # Clear transactions to generate new block
-        self.chain.append(block)    # Append block to chain
 
-        return block
+        return new_block
 
     @staticmethod
     def hash_block(block):

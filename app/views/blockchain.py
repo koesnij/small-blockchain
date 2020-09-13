@@ -12,6 +12,7 @@ class Node(Resource):
         """
         Add new node to blockchain
         """
+        print("request", request)
         if not request.is_json:
             return Response('', 400)
 
