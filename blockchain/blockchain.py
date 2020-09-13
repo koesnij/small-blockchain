@@ -1,4 +1,4 @@
-import hashlib
+from hashlib import sha256
 import json
 from time import time
 from urllib.parse import urlparse
@@ -7,6 +7,9 @@ class Blockchain:
     DEFAULT_VERSION = '1.0'
 
     def __init__(self):
+        """
+        Initializes Chain, Nodes, Current Transactions
+        """
         self.current_transactions = []
         self.chain = []
         self.nodes = set()
@@ -34,8 +37,8 @@ class Blockchain:
             'nonce': nonce
         }
 
-        self.current_transactions = []
-        self.chain.append(block)
+        self.current_transactions.clear()   # Clear transactions to generate new block
+        self.chain.append(block)    # Append block to chain
 
         return block
 
@@ -43,9 +46,17 @@ class Blockchain:
     def hash_block(block):
         block_str = json.dumps(block, sort_keys=True).encode()
 
-        return hashlib.sha256(block_str).hexdigest()
+        return sha256(sha256(block_str).digest()).hexdigest()
 
     def new_transaction(self, sender, recipient, amount):
+        """
+        Adds new transaction to block
+
+        :param sender: Sender's wallet ID of transaction
+        :param recipient: Recipient's wallet ID of transaction
+        :param amount: Amount of transaction
+        :return: None
+        """
         self.current_transactions.append({
             'sender': sender,
             'recipient': recipient,
@@ -56,25 +67,36 @@ class Blockchain:
 
     @property
     def last_block(self):
+        """
+        Returns most recent block of chain
+        :return: Most recent block
+        """
         return self.chain[-1]
 
-    def proof_of_work(self, last_nonce):
+    def proof_of_work(self, prev_nonce):
         """
-        Proof of Work Mining
+        Finds current block's nonce
 
-        :param last_nonce:
-        :return:
+        :param prev_nonce: Previous block's nonce
+        :return: nonce
         """
         nonce = 0
-        while self.is_valid_nonce(last_nonce, nonce) is False:
+        while self.is_valid_nonce(prev_nonce, nonce) is False:
             nonce += 1
 
         return nonce
 
     @staticmethod
-    def is_valid_nonce(last_nonce, nonce):
-        guess = '{0}{1}'.format(last_nonce, nonce).encode()
-        guess_hash = hashlib.sha256(guess).hexdigest()
+    def is_valid_nonce(prev_nonce, nonce):
+        """
+        Checks nonce is valid
+
+        :param prev_nonce: Previous block's nonce
+        :param nonce: Current block's nonce
+        :return: Whether nonce is valid
+        """
+        guess = '{0}{1}'.format(prev_nonce, nonce).encode()
+        guess_hash = sha256(guess).hexdigest()
 
         return guess_hash[:4] == '0000'
 
